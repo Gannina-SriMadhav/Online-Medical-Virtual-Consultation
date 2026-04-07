@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.DEV ? 'http://localhost:8080/api' : '/api';
+export const API_BASE = import.meta.env.DEV ? 'http://localhost:8080/api' : '/api';
 
 export const loginUser = async (email, password) => {
     const res = await fetch(`${API_BASE}/auth/login`, {
