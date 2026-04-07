@@ -8,6 +8,7 @@ const DoctorDashboard = () => {
   const [appointments, setAppointments] = useState([]);
   const [inCall, setInCall] = useState(false);
   const [activePatient, setActivePatient] = useState(null);
+  const [activePatientId, setActivePatientId] = useState(null);
   
   const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);
   const [showRecordModal, setShowRecordModal] = useState(false);
@@ -41,8 +42,9 @@ const DoctorDashboard = () => {
     setAppointments(data || []);
   };
 
-  const startCall = (apptId) => {
+  const startCall = (apptId, patientId) => {
     setActivePatient(apptId);
+    setActivePatientId(patientId);
     setInCall(true);
   };
 
@@ -89,7 +91,7 @@ const DoctorDashboard = () => {
   };
 
   if (inCall) {
-    return <VideoConsultation appointmentId={activePatient} isDoctor={true} onClose={() => setInCall(false)} />;
+    return <VideoConsultation appointmentId={activePatient} patientId={activePatientId} isDoctor={true} onClose={() => { setInCall(false); loadAppointments(); }} />;
   }
 
   return (
@@ -111,16 +113,16 @@ const DoctorDashboard = () => {
           <h3 style={{ marginBottom: '1.5rem', color: 'var(--accent-purple)', fontSize: '1.4rem', display: 'flex', alignItems: 'center', gap: '8px' }}><Calendar size={24} /> Scheduled Consultations</h3>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {appointments.length === 0 ? (
+            {appointments.filter(a => a.status !== 'COMPLETED').length === 0 ? (
               <p style={{ color: 'var(--text-secondary)' }}>No live appointments pending.</p>
-            ) : appointments.map((appt) => (
+            ) : appointments.filter(a => a.status !== 'COMPLETED').map((appt) => (
                 <div key={appt.id} style={{ background: 'rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <h4 style={{ fontSize: '1.2rem' }}>{appt.patient?.name || 'Unknown Patient'}</h4>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.4rem' }}>ID: {appt.id} • {new Date(appt.appointmentDate).toLocaleString()}</p>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                     <button className="glow-button pulse-button" onClick={() => startCall(appt.id)} style={{ padding: '8px 16px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                     <button className="glow-button pulse-button" onClick={() => startCall(appt.id, appt.patient?.id)} style={{ padding: '8px 16px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
                        <Video size={16} /> Join Video
                      </button>
                      <button onClick={() => handleCancel(appt.id)} style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '8px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} title="Cancel Appointment">

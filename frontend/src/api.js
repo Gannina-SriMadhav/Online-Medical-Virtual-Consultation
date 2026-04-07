@@ -94,6 +94,17 @@ export const addMedicalRecord = async (record) => {
 };
 
 export const cancelAppointment = async (id) => {
-    const res = await fetch(`${API_BASE}/appointments/${id}`, { method: 'DELETE' });
-    return res.ok;
+    const res = await fetch(`${API_BASE}/appointments/${id}`, {
+        method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to cancel appointment');
+    return true;
+};
+
+export const completeAppointment = async (id) => {
+    const res = await fetch(`${API_BASE}/appointments/${id}/complete`, {
+        method: 'PATCH'
+    });
+    if (!res.ok) throw new Error('Failed to complete consultation');
+    return res.json();
 };

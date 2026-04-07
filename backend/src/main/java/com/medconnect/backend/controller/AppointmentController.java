@@ -35,4 +35,9 @@ public class AppointmentController {
         appointmentService.deleteAppointment(id);
         return org.springframework.http.ResponseEntity.ok().build();
     }
+
+    @PatchMapping("/{id}/complete")
+    public Appointment completeAppointment(@PathVariable Long id) {
+        return appointmentService.completeAppointment(id);
+    }
 }

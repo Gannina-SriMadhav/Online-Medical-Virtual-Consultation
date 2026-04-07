@@ -1,12 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Peer from 'peerjs';
 import toast from 'react-hot-toast';
+import { completeAppointment, issuePrescription, addMedicalRecord } from '../api';
 
-const VideoConsultation = ({ appointmentId, isDoctor, onClose }) => {
+const VideoConsultation = ({ appointmentId, patientId, isDoctor, onClose }) => {
   const [errorStatus, setErrorStatus] = useState('');
   const [isJoined, setIsJoined] = useState(false);
   const [remoteStreamAttached, setRemoteStreamAttached] = useState(false);
   const remoteStreamAttachedRef = useRef(false);
+  
+  // Clinical Tools State
+  const [showToolsPanel, setShowToolsPanel] = useState(false);
+  const [activeTab, setActiveTab] = useState('prescription');
+  const [prescriptionData, setPrescriptionData] = useState({ medicationDetails: '', instructions: '' });
+  const [recordData, setRecordData] = useState({ diagnosis: '', treatmentPlan: '' });
   
   const [micEnabled, setMicEnabled] = useState(true);
   const [cameraEnabled, setCameraEnabled] = useState(true);
@@ -133,6 +140,48 @@ const VideoConsultation = ({ appointmentId, isDoctor, onClose }) => {
      peerInstance.current = peer;
   };
 
+  const handleEndCall = async () => {
+     if(isDoctor) {
+         try {
+            await completeAppointment(appointmentId);
+            toast.success("Consultation successfully completed and secured");
+            onClose(); // Exit the room
+         } catch(e) {
+            toast.error("Failed to mark appointment as completed");
+            onClose();
+         }
+     } else {
+         onClose();
+     }
+  };
+
+  const handlePrescriptionSubmit = async (e) => {
+      e.preventDefault();
+      try {
+          await issuePrescription(appointmentId, prescriptionData);
+          toast.success("Prescription securely saved to record!");
+          setPrescriptionData({ medicationDetails: '', instructions: '' });
+      } catch(e) {
+          toast.error("Failed to save prescription.");
+      }
+  };
+
+  const handleDiagnosisSubmit = async (e) => {
+      e.preventDefault();
+      try {
+          const payload = {
+              patient: { id: patientId },
+              diagnosis: recordData.diagnosis,
+              treatmentPlan: recordData.treatmentPlan
+          };
+          await addMedicalRecord(payload);
+          toast.success("Clinical diagnosis captured!");
+          setRecordData({ diagnosis: '', treatmentPlan: '' });
+      } catch(e) {
+          toast.error("Failed to log diagnosis.");
+      }
+  };
+
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.95)', zIndex: 1000, display: 'flex', flexDirection: 'column' }}>
        {/* HEADER */}
@@ -214,20 +263,55 @@ const VideoConsultation = ({ appointmentId, isDoctor, onClose }) => {
                          <span style={{ color: 'var(--text-secondary)', fontSize: '1.2rem' }}>Waiting for connection...</span>
                       </div>
                    )}
-                </div>
-
-                {/* Call Controls Floating */}
-                <div className="glass-card" style={{ position: 'absolute', bottom: '30px', left: '50%', transform: 'translateX(-50%)', padding: '15px 30px', display: 'flex', gap: '20px', borderRadius: '50px', zIndex: 10 }}>
-                   <button onClick={() => setMicEnabled(!micEnabled)} style={{ width: '50px', height: '50px', borderRadius: '50%', border: 'none', background: micEnabled ? 'rgba(255,255,255,0.1)' : '#ef4444', color: 'white', cursor: 'pointer', fontSize: '1.2rem', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                      {micEnabled ? '🎙️' : '🔇'}
-                   </button>
-                   <button onClick={() => setCameraEnabled(!cameraEnabled)} style={{ width: '50px', height: '50px', borderRadius: '50%', border: 'none', background: cameraEnabled ? 'rgba(255,255,255,0.1)' : '#ef4444', color: 'white', cursor: 'pointer', fontSize: '1.2rem', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                      {cameraEnabled ? '📹' : '🚫'}
-                   </button>
-                   <div style={{ width: '1px', background: 'rgba(255,255,255,0.2)', margin: '0 10px' }}></div>
-                   <button onClick={onClose} style={{ width: '50px', height: '50px', borderRadius: '50%', border: 'none', background: '#ef4444', color: 'white', cursor: 'pointer', fontSize: '1.2rem', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                      📞
-                   </button>
+                   
+                   {/* Call Controls Floating */}
+                   <div className="glass-card" style={{ position: 'absolute', bottom: '30px', left: '50%', transform: `translateX(${showToolsPanel && isDoctor ? '-150%' : '-50%'})`, transition: 'all 0.3s ease', padding: '15px 30px', display: 'flex', gap: '20px', borderRadius: '50px', zIndex: 10 }}>
+                      <button onClick={() => setMicEnabled(!micEnabled)} style={{ width: '50px', height: '50px', borderRadius: '50%', border: 'none', background: micEnabled ? 'rgba(255,255,255,0.1)' : '#ef4444', color: 'white', cursor: 'pointer', fontSize: '1.2rem', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                         {micEnabled ? '🎙️' : '🔇'}
+                      </button>
+                      <button onClick={() => setCameraEnabled(!cameraEnabled)} style={{ width: '50px', height: '50px', borderRadius: '50%', border: 'none', background: cameraEnabled ? 'rgba(255,255,255,0.1)' : '#ef4444', color: 'white', cursor: 'pointer', fontSize: '1.2rem', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                         {cameraEnabled ? '📹' : '🚫'}
+                      </button>
+                      <div style={{ width: '1px', background: 'rgba(255,255,255,0.2)', margin: '0 10px' }}></div>
+                      <button onClick={handleEndCall} style={{ height: '50px', borderRadius: '25px', padding: '0 25px', border: 'none', background: '#ef4444', color: 'white', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                         📞 {isDoctor ? 'End Consultation' : 'Leave'}
+                      </button>
+                      {isDoctor && (
+                          <button onClick={() => setShowToolsPanel(!showToolsPanel)} style={{ height: '50px', borderRadius: '25px', padding: '0 25px', border: '1px solid var(--accent-purple)', background: showToolsPanel ? 'var(--accent-purple)' : 'rgba(255,255,255,0.1)', color: 'white', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold', marginLeft: '10px' }}>
+                              🗒️ Clinical Tools
+                          </button>
+                      )}
+                   </div>
+                   
+                   {/* Clinical Form Sliding Panel (Doctors Only) */}
+                   {isDoctor && (
+                       <div className="glass-card" style={{ 
+                           position: 'absolute', right: showToolsPanel ? '20px' : '-450px', top: '20px', bottom: '110px', width: '400px', 
+                           transition: 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1)', zIndex: 20, display: 'flex', flexDirection: 'column'
+                       }}>
+                           <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                               <button onClick={() => setActiveTab('prescription')} style={{ flex: 1, padding: '15px', background: activeTab === 'prescription' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', color: activeTab === 'prescription' ? 'var(--accent-purple)' : 'white', fontWeight: 'bold', cursor: 'pointer' }}>Prescribe</button>
+                               <button onClick={() => setActiveTab('diagnose')} style={{ flex: 1, padding: '15px', background: activeTab === 'diagnose' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', color: activeTab === 'diagnose' ? 'var(--accent-purple)' : 'white', fontWeight: 'bold', cursor: 'pointer' }}>Diagnose</button>
+                           </div>
+                           <div style={{ padding: '20px', overflowY: 'auto', flex: 1 }}>
+                               {activeTab === 'prescription' ? (
+                                   <form onSubmit={handlePrescriptionSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                      <h3 style={{ color: 'white', marginTop: 0 }}>Add E-Prescription</h3>
+                                      <textarea placeholder="Medication Details (e.g., Amoxicillin 500mg)" required value={prescriptionData.medicationDetails} onChange={(e) => setPrescriptionData({...prescriptionData, medicationDetails: e.target.value})} style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', minHeight: '80px' }}></textarea>
+                                      <textarea placeholder="Usage Instructions (e.g., Twice daily after meals)" required value={prescriptionData.instructions} onChange={(e) => setPrescriptionData({...prescriptionData, instructions: e.target.value})} style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', minHeight: '80px' }}></textarea>
+                                      <button type="submit" className="glow-button" style={{ marginTop: '10px' }}>Issue Prescription</button>
+                                   </form>
+                               ) : (
+                                   <form onSubmit={handleDiagnosisSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                      <h3 style={{ color: 'white', marginTop: 0 }}>Clinical Record</h3>
+                                      <textarea placeholder="Official Diagnosis" required value={recordData.diagnosis} onChange={(e) => setRecordData({...recordData, diagnosis: e.target.value})} style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', minHeight: '80px' }}></textarea>
+                                      <textarea placeholder="Recommended Treatment Plan" required value={recordData.treatmentPlan} onChange={(e) => setRecordData({...recordData, treatmentPlan: e.target.value})} style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', minHeight: '80px' }}></textarea>
+                                      <button type="submit" className="glow-button" style={{ marginTop: '10px' }}>Save Log</button>
+                                   </form>
+                               )}
+                           </div>
+                       </div>
+                   )}
                 </div>
              </div>
           )}

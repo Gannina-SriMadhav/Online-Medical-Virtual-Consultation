@@ -83,7 +83,7 @@ const PatientDashboard = () => {
   };
 
   if (inCall) {
-    return <VideoConsultation appointmentId={activeAppt} isDoctor={false} onClose={() => setInCall(false)} />;
+    return <VideoConsultation appointmentId={activeAppt} isDoctor={false} onClose={() => { setInCall(false); loadData(); }} />;
   }
 
   return (
@@ -122,11 +122,11 @@ const PatientDashboard = () => {
         
         <div className="glass-card" style={{ marginTop: '2.5rem', padding: '2.5rem' }}>
           <h3 style={{ marginBottom: '1.5rem', color: 'var(--accent-purple)', fontSize: '1.4rem' }}>Upcoming Appointments</h3>
-          {appointments.length === 0 ? (
+          {appointments.filter(a => a.status !== 'COMPLETED').length === 0 ? (
              <p style={{ color: 'var(--text-secondary)' }}>You have no upcoming appointments in the database right now.</p>
           ) : (
              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {appointments.map(appt => (
+              {appointments.filter(a => a.status !== 'COMPLETED').map(appt => (
                 <div key={appt.id} style={{ background: 'rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '10px', display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <h4 style={{fontSize: '1.1rem'}}>Dr. {appt.doctor?.name || 'Specialist'}</h4>

@@ -28,4 +28,11 @@ public class AppointmentService {
     public void deleteAppointment(Long appointmentId) {
         appointmentRepository.deleteById(appointmentId);
     }
+
+    public Appointment completeAppointment(Long appointmentId) {
+        return appointmentRepository.findById(appointmentId).map(appointment -> {
+            appointment.setStatus("COMPLETED");
+            return appointmentRepository.save(appointment);
+        }).orElseThrow(() -> new RuntimeException("Appointment not found"));
+    }
 }
