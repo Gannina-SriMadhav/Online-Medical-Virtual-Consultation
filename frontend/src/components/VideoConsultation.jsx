@@ -103,8 +103,8 @@ const VideoConsultation = ({ appointmentId, isDoctor, onClose }) => {
           
           {/* Main Display Box depending on state */}
           {!isJoined ? (
-             <div className="glass-card" style={{ width: '800px', height: '500px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                <div style={{ flex: 1, background: '#111', position: 'relative' }}>
+             <div className="glass-card" style={{ width: '95%', maxWidth: '800px', height: 'auto', maxHeight: '80vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <div style={{ flex: 1, minHeight: '300px', background: '#111', position: 'relative' }}>
                    <video 
                      ref={localVideoRef} 
                      autoPlay 
@@ -114,20 +114,20 @@ const VideoConsultation = ({ appointmentId, isDoctor, onClose }) => {
                    />
                    {!cameraEnabled && (
                       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#222' }}>
-                         <span style={{ color: 'var(--text-secondary)' }}>Camera is Off</span>
+                         <span style={{ color: 'var(--text-secondary)' }}>Camera is Off or Blocked</span>
                       </div>
                    )}
                 </div>
-                <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.05)' }}>
-                   <div style={{ display: 'flex', gap: '15px' }}>
-                      <button onClick={() => setMicEnabled(!micEnabled)} style={{ padding: '12px 24px', borderRadius: '30px', border: 'none', background: micEnabled ? 'rgba(255,255,255,0.1)' : '#ef4444', color: 'white', cursor: 'pointer', outline: '1px solid rgba(255,255,255,0.2)' }}>
+                <div style={{ padding: '15px 20px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.05)', gap: '10px' }}>
+                   <div style={{ display: 'flex', gap: '10px' }}>
+                      <button onClick={() => setMicEnabled(!micEnabled)} style={{ padding: '10px 20px', borderRadius: '30px', border: 'none', background: micEnabled ? 'rgba(255,255,255,0.1)' : '#ef4444', color: 'white', cursor: 'pointer', outline: '1px solid rgba(255,255,255,0.2)' }}>
                          {micEnabled ? '🎙️ Mic On' : '🔇 Mic Off'}
                       </button>
-                      <button onClick={() => setCameraEnabled(!cameraEnabled)} style={{ padding: '12px 24px', borderRadius: '30px', border: 'none', background: cameraEnabled ? 'rgba(255,255,255,0.1)' : '#ef4444', color: 'white', cursor: 'pointer', outline: '1px solid rgba(255,255,255,0.2)' }}>
+                      <button onClick={() => setCameraEnabled(!cameraEnabled)} style={{ padding: '10px 20px', borderRadius: '30px', border: 'none', background: cameraEnabled ? 'rgba(255,255,255,0.1)' : '#ef4444', color: 'white', cursor: 'pointer', outline: '1px solid rgba(255,255,255,0.2)' }}>
                          {cameraEnabled ? '📹 Video On' : '🚫 Video Off'}
                       </button>
                    </div>
-                   <button className="glow-button" onClick={handleJoin} style={{ padding: '12px 40px', fontSize: '1.1rem' }}>Join Consultation</button>
+                   <button className="glow-button" onClick={handleJoin} style={{ padding: '12px 30px', fontSize: '1rem', whiteSpace: 'nowrap' }}>Join Consultation</button>
                 </div>
              </div>
           ) : (
