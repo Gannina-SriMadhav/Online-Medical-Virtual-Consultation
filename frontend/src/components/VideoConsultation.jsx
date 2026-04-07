@@ -6,6 +6,7 @@ const VideoConsultation = ({ appointmentId, isDoctor, onClose }) => {
   const [errorStatus, setErrorStatus] = useState('');
   const [isJoined, setIsJoined] = useState(false);
   const [remoteStreamAttached, setRemoteStreamAttached] = useState(false);
+  const remoteStreamAttachedRef = useRef(false);
   
   const [micEnabled, setMicEnabled] = useState(true);
   const [cameraEnabled, setCameraEnabled] = useState(true);
@@ -69,9 +70,10 @@ const VideoConsultation = ({ appointmentId, isDoctor, onClose }) => {
        peer.on('call', (call) => {
           call.answer(localStreamRef.current);
           call.on('stream', (remoteStream) => {
-             if (remoteVideoRef.current) {
+             if (remoteVideoRef.current && !remoteStreamAttachedRef.current) {
                 remoteVideoRef.current.srcObject = remoteStream;
                 remoteVideoRef.current.play().catch(e => console.error("Play error:", e));
+                remoteStreamAttachedRef.current = true;
                 setRemoteStreamAttached(true);
                 toast.success("Connected!");
              }
@@ -80,28 +82,26 @@ const VideoConsultation = ({ appointmentId, isDoctor, onClose }) => {
 
        // Actively dial the other person
        const attemptCall = () => {
-          if (remoteStreamAttached) return;
+          if (remoteStreamAttachedRef.current) return;
           const call = peer.call(targetId, localStreamRef.current);
           if (call) {
              call.on('stream', (remoteStream) => {
-                if (remoteVideoRef.current) {
+                if (remoteVideoRef.current && !remoteStreamAttachedRef.current) {
                    remoteVideoRef.current.srcObject = remoteStream;
                    remoteVideoRef.current.play().catch(e => console.error("Play error:", e));
+                   remoteStreamAttachedRef.current = true;
                    setRemoteStreamAttached(true);
                    toast.success("Connected!");
                 }
              });
-             call.on('error', () => {
-                // Ignore call errors
-             });
+             call.on('error', () => {});
           }
        };
 
-       // Try calling immediately
        attemptCall();
-       // Retry a few times in case they join slightly after us
+       
        const retryInterval = setInterval(() => {
-          if(!remoteStreamAttached && peerInstance.current && !peerInstance.current.disconnected) {
+          if(!remoteStreamAttachedRef.current && peerInstance.current && !peerInstance.current.disconnected) {
              attemptCall();
           } else {
              clearInterval(retryInterval);
