@@ -1,0 +1,4 @@
+/* Removed default App.css bloat to leverage index.css */
+.app-container {
+  width: 100%;
+}

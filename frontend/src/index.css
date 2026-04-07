@@ -1,0 +1,123 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg-gradient: radial-gradient(circle at 60% 40%, #2f255e 0%, #15112e 50%, #0a0b1a 100%);
+  --accent-purple: #9b51e0;
+  --accent-orange: #f2994a;
+  --text-primary: #ffffff;
+  --text-secondary: #a0a0b8;
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+}
+
+body {
+  background: var(--bg-gradient);
+  background-color: #0a0b1a; /* fallback */
+  background-attachment: fixed;
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-card:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.glow-button {
+  background: linear-gradient(135deg, var(--accent-purple), var(--accent-orange));
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 30px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(155, 81, 224, 0.4);
+  transition: transform 0.2s, box-shadow 0.2s;
+  text-decoration: none;
+}
+
+.glow-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(155, 81, 224, 0.6);
+}
+
+.glow-text {
+  background: linear-gradient(135deg, var(--accent-purple), #ffb266);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(155, 81, 224, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(155, 81, 224, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(155, 81, 224, 0); }
+}
+
+.pulse-button {
+  animation: pulse 2s infinite;
+}
+
+/* Common overrides for Vite */
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* LIGHT MODE OVERRIDES */
+:root[data-theme='light'] {
+  --bg-gradient: radial-gradient(circle at 50% 50%, #ffffff 0%, #f1f5f9 100%);
+  --accent-purple: #7e22ce;
+  --accent-orange: #ea580c;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(0, 0, 0, 0.1);
+}
+:root[data-theme='light'] body {
+  background-color: #f8fafc;
+}
+:root[data-theme='light'] .glass-card {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+}
+:root[data-theme='light'] input,
+:root[data-theme='light'] select,
+:root[data-theme='light'] textarea,
+:root[data-theme='light'] option {
+  background: rgba(0, 0, 0, 0.03) !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  color: var(--text-primary) !important;
+}
+:root[data-theme='light'] .glow-text {
+  background: linear-gradient(135deg, var(--accent-purple), var(--accent-orange));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+:root[data-theme='light'] ::placeholder {
+  color: #64748b !important;
+}
+:root[data-theme='light'] button[style*="transparent"],
+:root[data-theme='light'] .glow-button[style*="transparent"] {
+  color: var(--text-primary) !important;
+  border-color: rgba(0, 0, 0, 0.3) !important;
+}
+:root[data-theme='light'] button[style*="transparent"]:hover,
+:root[data-theme='light'] .glow-button[style*="transparent"]:hover {
+  background: rgba(0, 0, 0, 0.05) !important;
+}
