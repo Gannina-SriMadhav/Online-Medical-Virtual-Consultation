@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Peer from 'peerjs';
+import toast from 'react-hot-toast';
 
 const VideoConsultation = ({ appointmentId, isDoctor, onClose }) => {
   const [errorStatus, setErrorStatus] = useState('');
@@ -45,42 +46,73 @@ const VideoConsultation = ({ appointmentId, isDoctor, onClose }) => {
      }
   }, [micEnabled, cameraEnabled]);
 
-  // Handle joining the room
   const handleJoin = () => {
      setIsJoined(true);
+     toast.success("Connecting to secure server...");
      
      const myId = `medconnect-appt-${appointmentId}-${isDoctor ? 'doctor' : 'patient'}`;
      const targetId = `medconnect-appt-${appointmentId}-${isDoctor ? 'patient' : 'doctor'}`;
 
-     const peer = new Peer(myId);
+     const peer = new Peer(myId, {
+        config: {
+           iceServers: [
+              { urls: 'stun:stun.l.google.com:19302' },
+              { urls: 'stun:stun1.l.google.com:19302' },
+           ]
+        }
+     });
 
      peer.on('open', () => {
+       toast.success("Ready! Waiting for other party...");
+       
        // Listen for incoming calls
        peer.on('call', (call) => {
           call.answer(localStreamRef.current);
           call.on('stream', (remoteStream) => {
              if (remoteVideoRef.current) {
                 remoteVideoRef.current.srcObject = remoteStream;
+                remoteVideoRef.current.play().catch(e => console.error("Play error:", e));
                 setRemoteStreamAttached(true);
+                toast.success("Connected!");
              }
           });
        });
 
        // Actively dial the other person
-       const call = peer.call(targetId, localStreamRef.current);
-       if (call) {
-          call.on('stream', (remoteStream) => {
-             if (remoteVideoRef.current) {
-                remoteVideoRef.current.srcObject = remoteStream;
-                setRemoteStreamAttached(true);
-             }
-          });
-       }
+       const attemptCall = () => {
+          if (remoteStreamAttached) return;
+          const call = peer.call(targetId, localStreamRef.current);
+          if (call) {
+             call.on('stream', (remoteStream) => {
+                if (remoteVideoRef.current) {
+                   remoteVideoRef.current.srcObject = remoteStream;
+                   remoteVideoRef.current.play().catch(e => console.error("Play error:", e));
+                   setRemoteStreamAttached(true);
+                   toast.success("Connected!");
+                }
+             });
+             call.on('error', () => {
+                // Ignore call errors
+             });
+          }
+       };
+
+       // Try calling immediately
+       attemptCall();
+       // Retry a few times in case they join slightly after us
+       const retryInterval = setInterval(() => {
+          if(!remoteStreamAttached && peerInstance.current && !peerInstance.current.disconnected) {
+             attemptCall();
+          } else {
+             clearInterval(retryInterval);
+          }
+       }, 5000);
      });
 
      peer.on('error', (err) => {
-        // Ignored. They might not be in the room yet.
-        console.log("Peer error:", err.type);
+        if(err.type !== 'peer-unavailable') {
+            console.error("Peer error:", err.type);
+        }
      });
 
      peerInstance.current = peer;
