@@ -135,8 +135,8 @@ const VideoConsultation = ({ appointmentId, isDoctor, onClose }) => {
           
           {/* Main Display Box depending on state */}
           {!isJoined ? (
-             <div className="glass-card" style={{ width: '95%', maxWidth: '800px', height: 'auto', maxHeight: '80vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                <div style={{ flex: 1, minHeight: '300px', background: '#111', position: 'relative' }}>
+             <div className="glass-card" style={{ width: '95%', maxWidth: '800px', maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+                <div style={{ flex: 1, minHeight: '250px', background: '#111', position: 'relative' }}>
                    <video 
                      ref={localVideoRef} 
                      autoPlay 
@@ -183,11 +183,14 @@ const VideoConsultation = ({ appointmentId, isDoctor, onClose }) => {
                 </div>
 
                 {/* Remote Video - Right Side */}
-                <div className="glass-card" style={{ flex: 1, position: 'relative', overflow: 'hidden', background: '#111', borderRadius: '20px', border: '2px solid rgba(255,255,255,0.1)' }}>
+                <div className="glass-card" style={{ flex: 1, position: 'relative', overflow: 'auto', background: '#111', borderRadius: '20px', border: '2px solid rgba(255,255,255,0.1)' }}>
                    <video 
                       ref={remoteVideoRef} 
                       autoPlay 
                       playsInline 
+                      onLoadedMetadata={(e) => {
+                          e.target.play().catch(err => console.error("Meta play error", err));
+                       }}
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
                    />
                    <div style={{ position: 'absolute', bottom: '20px', left: '20px', background: 'rgba(0,0,0,0.6)', padding: '5px 15px', borderRadius: '15px', color: 'white' }}>{isDoctor ? 'Patient' : 'Doctor'}</div>
